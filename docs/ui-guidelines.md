@@ -160,10 +160,10 @@ Inter хранится локально в форматe WOFF2. Подключе
 - цвета, шрифты и тени объявляются как theme variables;
 - layout и стили компонентов собираются utility-классами;
 - базовый reset и глобальные правила доступности находятся в
-  `src/styles/base.css`;
-- шрифты подключаются в `src/styles/fonts.css`;
-- Tailwind-токены находятся в `src/styles/theme.css`;
-- `src/styles/index.css` остаётся единой точкой подключения стилей;
+  `src/app/styles/base.css`;
+- шрифты подключаются в `src/app/styles/fonts.css`;
+- Tailwind-токены находятся в `src/app/styles/theme.css`;
+- `src/app/styles/index.css` остаётся единой точкой подключения стилей;
 - повторяющиеся UI-паттерны выносятся в React-компоненты;
 - произвольные значения используются только в исключительных случаях;
 - CSS-in-JS не используется.
