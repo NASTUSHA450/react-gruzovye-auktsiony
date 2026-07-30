@@ -1,32 +1,247 @@
-# React + TypeScript + Vite
+# Грузовые аукционы
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Тестовое задание на позицию Frontend Developer: SPA для работы с грузовыми
+аукционами по готовой OpenAPI-схеме.
 
-Currently, two official plugins are available:
+## Статус
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- [x] Создан базовый проект на React, TypeScript и Vite
+- [x] Настроены сборка и линтер
+- [ ] Получена и изучена схема `openapi.auctions.v0.json`
+- [ ] Реализовано приложение
+- [ ] Добавлены проверки и описаны результаты
+- [ ] Подготовлен `AI_USAGE.md`
 
-## React Compiler
+> [!IMPORTANT]
+> OpenAPI-схема является источником правды. До проектирования DTO, моков и
+> запросов нужен файл `openapi.auctions.v0.json`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+> [!IMPORTANT]
+> По условию все файлы React-компонентов должны иметь суффикс
+> `*.component.tsx`.
 
-## Expanding the Oxlint configuration
+## Запуск
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+Требуется Node.js 22 или новее.
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Другие команды:
+
+```bash
+npm run build
+npm run lint
+npm run preview
+```
+
+В Windows PowerShell с запрещённым выполнением `npm.ps1` следует использовать
+`npm.cmd` вместо `npm`, например `npm.cmd run dev`.
+
+## Обязательный стек
+
+- React
+- TypeScript
+- Vite
+- TanStack Router
+- TanStack Query
+- React Hook Form + Zod
+- MSW
+- Feature-Sliced Design
+- Zustand или MobX для точечного клиентского UI-state
+
+Предварительный выбор: Zustand. Он будет использоваться только для локального
+UI-состояния, которое не относится к данным сервера. Серверные данные должны
+оставаться в TanStack Query.
+
+## API
+
+Backend писать не нужно. MSW-моки должны точно соответствовать OpenAPI-схеме и
+реально менять состояние после mutation.
+
+| Метод | Endpoint | Назначение |
+| --- | --- | --- |
+| `POST` | `/auctions/list` | Список аукционов |
+| `GET` | `/auctions/{auctionUuid}` | Детальная информация |
+| `GET` | `/auctions/{auctionUuid}/bets` | История ставок |
+| `POST` | `/auctions/{auctionUuid}/bets` | Установка ставки |
+
+Нужно проверить структуры запросов и ответов, enum-значения, nullable-поля,
+ошибки и edge cases.
+
+## План реализации
+
+### Этап 0. Разбор контракта и фиксация решений
+
+- [ ] Добавить `openapi.auctions.v0.json` в проект
+- [ ] Изучить DTO, enum, nullable-поля и форматы ошибок
+- [ ] Проверить параметры всех четырёх endpoints
+- [ ] Выписать ограничения для ставки: `min`, `max`, `step`
+- [ ] Зафиксировать маршруты приложения и query keys
+- [ ] Выбрать UI-подход и базовые дизайн-токены
+- [ ] Создать и постепенно заполнять `AI_USAGE.md`
+
+Результат этапа: понятный API-контракт, схема маршрутов и отсутствие
+предположений о данных.
+
+### Этап 1. Инфраструктура и архитектура
+
+- [ ] Установить обязательные зависимости
+- [ ] Настроить TanStack Router
+- [ ] Настроить TanStack Query и Query Client
+- [ ] Настроить MSW для разработки и тестов
+- [ ] Разложить проект по слоям Feature-Sliced Design
+- [ ] Настроить Zustand для точечного UI-state
+- [ ] Добавить общие стили, адаптивные breakpoints и layout
+- [ ] Добавить базовые компоненты loading, skeleton, empty и error state
+
+Ориентировочная структура FSD:
+
+```text
+src/
+  app/        # провайдеры, роутер, глобальные стили
+  pages/      # страницы списка, деталей и ставки
+  widgets/    # крупные самостоятельные блоки страниц
+  features/   # фильтрация, установка ставки
+  entities/   # auction, bet
+  shared/     # API, UI-kit, утилиты, конфигурация
+```
+
+### Этап 2. MSW и тестовые данные
+
+- [ ] Создать мок-словарь городов
+- [ ] Подготовить аукционы для разных типов и статусов
+- [ ] Добавить пустые, ошибочные и пограничные сценарии
+- [ ] Реализовать handlers для всех endpoints
+- [ ] Сделать in-memory store для аукционов и ставок
+- [ ] После ставки обновлять цену, статус пользователя и историю ставок
+- [ ] Реализовать ответ `422 validation error`
+- [ ] Проверить соответствие моков OpenAPI-схеме
+
+### Этап 3. Список аукционов
+
+- [ ] Загрузка через TanStack Query
+- [ ] Пагинация
+- [ ] Skeleton, empty и error states
+- [ ] Prefetch деталей по hover/focus intent
+- [ ] Адаптивная desktop/mobile вёрстка
+- [ ] Фильтры с синхронизацией в URL search params
+- [ ] Zod-валидация search params и безопасные fallback-значения
+
+Минимальные фильтры:
+
+- [ ] `cargo_num`
+- [ ] `status`
+- [ ] `statuses`
+- [ ] `auc_type`
+- [ ] `load_city` из мок-словаря
+- [ ] `unload_city` из мок-словаря
+- [ ] дата погрузки от/до
+- [ ] `is_available`
+- [ ] `is_bidder`
+- [ ] цена от/до
+
+Карточка аукциона должна показывать:
+
+- [ ] номер заявки
+- [ ] тип: `Request`, `Up`, `Down`, `FixPrice`
+- [ ] статус аукциона
+- [ ] торговый статус пользователя: `Leading`, `Losing`, `Winner` и другие
+- [ ] маршрут погрузка → выгрузка
+- [ ] даты погрузки и разгрузки
+- [ ] название груза, вес, объём и тип кузова
+- [ ] текущую цену, цену за километр и шаг ставки
+- [ ] наличие своей ставки
+- [ ] корректный primary action или disabled-состояние
+
+### Этап 4. Детальная страница
+
+- [ ] Загрузить данные через `GET /auctions/{auctionUuid}`
+- [ ] Показать основные данные аукциона и организатора
+- [ ] Показать контакты, если они не скрыты
+- [ ] Показать маршрут со всеми точками
+- [ ] Показать груз и требования к транспортному средству
+- [ ] Показать условия оплаты и параметры торгов
+- [ ] Показать текущую и доступную цену, `min`, `max`, `step`
+- [ ] Показать состояние своей ставки
+- [ ] Учесть `can_set_bet`
+- [ ] Учесть `hide_bets_history`
+- [ ] Учесть `hide_points_address_and_contacts`
+- [ ] Учесть `no_view_cargo_price`
+- [ ] Добавить loading, empty и error states
+
+### Этап 5. История ставок
+
+- [ ] Загрузить данные через `GET /auctions/{auctionUuid}/bets`
+- [ ] Показать список ставок и количество участников
+- [ ] Показать цену с НДС и без НДС
+- [ ] Показать перевозчика и место в рейтинге
+- [ ] Показать признаки победителя и отменённой ставки
+- [ ] Показать причину отмены, если она есть
+- [ ] Добавить empty state
+- [ ] Добавить отдельное состояние для `hide_bets_history`
+
+### Этап 6. Установка ставки
+
+Режим установки ставки должен открываться по отдельной ссылке.
+
+- [ ] Проверять доступность формы по `trading.can_set_bet`
+- [ ] Создать форму на React Hook Form + Zod
+- [ ] Проверять, что цена обязательна и больше нуля
+- [ ] Учитывать `min`, `max` и `step`, если они есть в detail DTO
+- [ ] Показывать доступную цену и шаг ставки
+- [ ] Вызывать `POST /auctions/{auctionUuid}/bets`
+- [ ] После успеха инвалидировать list/detail/bets queries
+- [ ] Показывать success/error toast
+- [ ] Обрабатывать `422 validation error`
+- [ ] Проверить, что MSW-store обновляет все связанные данные
+
+### Этап 7. Тестирование и ручная проверка
+
+- [ ] Добавить тесты парсинга search params
+- [ ] Добавить тесты request builder
+- [ ] Добавить тесты ViewModel-мапперов
+- [ ] Добавить тесты Zod-схемы ставки
+- [ ] Проверить основные пользовательские сценарии вручную
+- [ ] Проверить skeleton, empty, error и restricted states
+- [ ] Проверить desktop и mobile
+- [ ] Запустить lint, тесты и production build
+- [ ] Описать в README проверенные сценарии и оставшиеся ограничения
+
+### Этап 8. Подготовка к сдаче
+
+- [ ] Удалить временные и неиспользуемые файлы
+- [ ] Проверить имена всех компонентов: `*.component.tsx`
+- [ ] Проверить README с чистой установкой и запуском
+- [ ] Заполнить `AI_USAGE.md`
+- [ ] Проверить историю Git и отсутствие секретов
+- [ ] Отправить финальную версию в репозиторий
+
+## Содержание `AI_USAGE.md`
+
+Перед сдачей необходимо честно описать:
+
+- какие части делались с AI;
+- какие решения кандидат принял самостоятельно;
+- какие предложения AI были отклонены;
+- какие места проверялись особенно внимательно;
+- какие риски остались;
+- что можно было бы улучшить при наличии ещё одного дня.
+
+## Проверенные сценарии
+
+Раздел будет заполняться по мере разработки.
+
+Сейчас проверено:
+
+- [x] установка зависимостей;
+- [x] production-сборка;
+- [x] линтер;
+- [x] запуск базового проекта на React + TypeScript + Vite.
+
+## Известные ограничения
+
+- Пока отсутствует `openapi.auctions.v0.json`, поэтому нельзя корректно
+  проектировать DTO, API-клиент и MSW-моки.
