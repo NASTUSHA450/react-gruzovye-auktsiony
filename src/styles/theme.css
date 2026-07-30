@@ -1,0 +1,33 @@
+@theme {
+  --color-canvas: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-ink: #1f2933;
+  --color-muted: #667085;
+  --color-line: #e2e6ea;
+  --color-brand: #355c7d;
+  --color-brand-hover: #294a67;
+  --color-success: #477a5b;
+  --color-warning: #9a6a2f;
+  --color-danger: #a64b4b;
+
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  --shadow-card: 0 1px 2px rgb(31 41 51 / 6%), 0 8px 24px rgb(31 41 51 / 8%);
+}
+
+/* Временные aliases для стартового экрана Vite. Удалим вместе с ним. */
+:root {
+  --text: var(--color-muted);
+  --text-h: var(--color-ink);
+  --bg: var(--color-canvas);
+  --border: var(--color-line);
+  --code-bg: var(--color-surface);
+  --accent: var(--color-brand);
+  --accent-bg: color-mix(in srgb, var(--color-brand) 10%, transparent);
+  --accent-border: color-mix(in srgb, var(--color-brand) 45%, transparent);
+  --social-bg: var(--color-surface);
+  --shadow: var(--shadow-card);
+  --sans: var(--font-sans);
+  --heading: var(--font-sans);
+  --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
