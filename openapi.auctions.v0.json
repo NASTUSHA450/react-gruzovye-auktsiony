@@ -1,0 +1,2256 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API для UL - Auctions",
+    "description": "API для мобильных приложений и web UL",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/api/v1/"
+    }
+  ],
+  "paths": {
+    "/auctions/list": {
+      "post": {
+        "tags": [
+          "Auctions"
+        ],
+        "summary": "Список аукционов",
+        "description": "Получение списка аукционов с заданными фильтрами",
+        "operationId": "listAuctions",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuctionListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Успешный ответ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuctionListResponseBase"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/auctions/{auctionUuid}": {
+      "get": {
+        "tags": [
+          "Auctions"
+        ],
+        "summary": "Данные аукциона",
+        "description": "Получение подробных данных аукциона",
+        "operationId": "getAuction",
+        "parameters": [
+          {
+            "name": "auctionUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuctionShowResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/auctions/{auctionUuid}/bets": {
+      "get": {
+        "tags": [
+          "Auctions"
+        ],
+        "summary": "Список ставок аукциона",
+        "description": "Запрос вернет список ставок, которые были сделаны в этом аукционе",
+        "operationId": "listBets",
+        "parameters": [
+          {
+            "name": "auctionUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            }
+          },
+          {
+            "name": "all",
+            "in": "query",
+            "description": "Вернуть все ставки аукциона, в том числе отмененные",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BetListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Auctions"
+        ],
+        "summary": "Установить ставку",
+        "description": "Установить ставку в аукционе",
+        "operationId": "setBet",
+        "parameters": [
+          {
+            "name": "auctionUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetBetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ставка принята — ответ проксируется от upstream"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Auctions",
+      "description": "Управление аукционами"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "AdmittedOrganization": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 14
+          },
+          "inn": {
+            "type": "string",
+            "example": "9616244307"
+          },
+          "is_main": {
+            "type": "boolean",
+            "example": true
+          },
+          "name": {
+            "type": "string",
+            "example": "ООО Перевозчик"
+          },
+          "full_name": {
+            "type": "string",
+            "example": "Общество с ограниченной ответственностью Перевозчик"
+          },
+          "site": {
+            "type": "string",
+            "example": null,
+            "nullable": true
+          },
+          "subscriber_id": {
+            "type": "integer",
+            "example": 13
+          },
+          "subscriber_code": {
+            "type": "string",
+            "example": "54321"
+          },
+          "subscriber_role": {
+            "type": "string",
+            "example": null,
+            "nullable": true
+          },
+          "infobase_code": {
+            "type": "string",
+            "example": "RU_Cargo_01"
+          },
+          "infobase_address": {
+            "type": "string",
+            "example": null,
+            "nullable": true
+          },
+          "nalog_key": {
+            "type": "string",
+            "example": null,
+            "nullable": true
+          },
+          "hide_me": {
+            "type": "boolean",
+            "example": false
+          },
+          "current_vat_rate": {
+            "type": "string",
+            "example": "20",
+            "nullable": true
+          }
+        },
+        "type": "object"
+      },
+      "Assembly": {
+        "properties": {
+          "num": {
+            "type": "string",
+            "example": null,
+            "nullable": true
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "example": null,
+            "nullable": true
+          }
+        },
+        "type": "object"
+      },
+      "AuctionListItem": {
+        "description": "Главный Data-объект списка аукционов.",
+        "properties": {
+          "main": {
+            "$ref": "#/components/schemas/AuctionListItemMain"
+          },
+          "organizer": {
+            "$ref": "#/components/schemas/AuctionListItemOrganizer"
+          },
+          "route": {
+            "$ref": "#/components/schemas/AuctionListItemRoute"
+          },
+          "cargo": {
+            "$ref": "#/components/schemas/AuctionListItemCargo"
+          },
+          "trading": {
+            "$ref": "#/components/schemas/AuctionListItemTrading"
+          },
+          "payment": {
+            "$ref": "#/components/schemas/AuctionListItemPayment"
+          }
+        },
+        "type": "object"
+      },
+      "AuctionListItemCargo": {
+        "description": "Данные о грузе.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Мороженое"
+          },
+          "weight": {
+            "type": "number",
+            "example": 1
+          },
+          "volume": {
+            "type": "number",
+            "example": 1
+          },
+          "body_type": {
+            "type": "string",
+            "example": "тентованный"
+          },
+          "truck_count": {
+            "type": "integer",
+            "example": 1
+          },
+          "is_cargo": {
+            "type": "boolean",
+            "example": true
+          },
+          "is_international": {
+            "type": "boolean",
+            "example": null
+          },
+          "containered": {
+            "type": "boolean",
+            "example": null
+          },
+          "incoterms": {
+            "type": "string",
+            "example": null
+          },
+          "conics": {
+            "type": "integer",
+            "example": null
+          },
+          "belts": {
+            "type": "integer",
+            "example": null
+          },
+          "adr": {
+            "type": "integer",
+            "example": null
+          },
+          "coupling": {
+            "type": "boolean",
+            "example": null
+          },
+          "air_pass": {
+            "type": "boolean",
+            "example": null
+          },
+          "low_loader": {
+            "type": "boolean",
+            "example": null
+          },
+          "additional_load": {
+            "type": "boolean",
+            "example": null
+          },
+          "temp_from": {
+            "type": "integer",
+            "example": null
+          },
+          "temp_to": {
+            "type": "integer",
+            "example": null
+          },
+          "loading_types": {
+            "$ref": "#/components/schemas/AuctionListItemCargoLoadingType"
+          },
+          "docs": {
+            "$ref": "#/components/schemas/AuctionListItemCargoDocs"
+          },
+          "car": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AuctionListItemCargoCar"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "type": "object"
+      },
+      "AuctionListItemCargoCar": {
+        "description": "Требования к ТС; null если не заданы",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "Тягач"
+          },
+          "weight": {
+            "type": "number",
+            "format": "float",
+            "example": 20
+          },
+          "volume": {
+            "type": "number",
+            "format": "float",
+            "example": 82
+          },
+          "width": {
+            "type": "number",
+            "format": "float",
+            "example": 2.4
+          },
+          "length": {
+            "type": "number",
+            "format": "float",
+            "example": 13.6
+          },
+          "height": {
+            "type": "number",
+            "format": "float",
+            "example": 2.7
+          }
+        },
+        "type": "object"
+      },
+      "AuctionListItemCargoDocs": {
+        "description": "Данные о грузе.",
+        "properties": {
+          "tir": {
+            "type": "boolean",
+            "example": false
+          },
+          "cmr": {
+            "type": "boolean",
+            "example": false
+          },
+          "t1": {
+            "type": "boolean",
+            "example": false
+          },
+          "med": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "type": "object"
+      },
+      "AuctionListItemCargoLoadingType": {
+        "description": "Данные о грузе.",
+        "properties": {
+          "side": {
+            "type": "boolean",
+            "example": false
+          },
+          "top": {
+            "type": "boolean",
+            "example": false
+          },
+          "rear": {
+            "type": "boolean",
+            "example": false
+          },
+          "full": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "type": "object"
+      },
+      "AuctionListItemMain": {
+        "description": "Основные данные аукциона.",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 10
+          },
+          "cargo_num": {
+            "type": "string",
+            "example": "00000001059"
+          },
+          "cargo_date": {
+            "type": "string",
+            "example": "2026-05-04T14:49:09"
+          },
+          "auc_type": {
+            "description": "Тип аукциона:\n\n* **Request** — заявочный (1)\n* **Up** — на повышение (2)\n* **Down** — на понижение (3)\n* **FixPrice** — фиксированная цена (4)\n* **Unknown** — неизвестный тип\n",
+            "type": "string",
+            "example": "Down",
+            "enum": [
+              "Request",
+              "Up",
+              "Down",
+              "FixPrice",
+              "Unknown"
+            ]
+          },
+          "order_uid": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3a05d045-0e67-4f85-b20a-de81d18bba7a"
+          },
+          "created_at": {
+            "type": "string",
+            "example": "2026-05-25T11:48:20"
+          },
+          "priority_sort": {
+            "type": "integer",
+            "example": 0
+          },
+          "is_assembly": {
+            "type": "boolean",
+            "example": false
+          },
+          "price_per_km": {
+            "type": "number",
+            "format": "float",
+            "example": 199,
+            "nullable": true
+          }
+        },
+        "type": "object"
+      },
+      "AuctionListItemOrganizer": {
+        "description": "Данные организатора.",
+        "properties": {
+          "subscriber_id": {
+            "type": "integer",
+            "example": 98
+          },
+          "organization_id": {
+            "type": "integer",
+            "example": 340
+          },
+          "organization_name": {
+            "type": "string",
+            "example": "ЛИМ"
+          },
+          "organization_inn": {
+            "type": "string",
+            "example": "7703769184"
+          },
+          "organization_kpp": {
+            "type": "string",
+            "example": "770301001"
+          },
+          "is_hide_organization": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "type": "object"
+      },
+      "AuctionListItemPayment": {
+        "description": "Информация об оплате.",
+        "properties": {
+          "form": {
+            "type": "string",
+            "example": "Безналичная с НДС"
+          },
+          "currency_code": {
+            "description": "Код валюты (ISO 4217 numeric)",
+            "type": "string",
+            "example": "643"
+          },
+          "consignor": {
+            "type": "string",
+            "example": null
+          },
+          "consignee": {
+            "type": "string",
+            "example": null
+          }
+        },
+        "type": "object"
+      },
+      "AuctionListItemRoute": {
+        "description": "Объединенный маршрут.",
+        "properties": {
+          "load": {
+            "$ref": "#/components/schemas/AuctionListItemRoutePoint"
+          },
+          "unload": {
+            "$ref": "#/components/schemas/AuctionListItemRoutePoint"
+          }
+        },
+        "type": "object"
+      },
+      "AuctionListItemRoutePoint": {
+        "description": "Точка маршрута (загрузка/разгрузка).",
+        "properties": {
+          "city": {
+            "type": "string",
+            "example": "Пермь"
+          },
+          "address": {
+            "type": "string",
+            "example": "Транспортная 9"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-26T09:00:00"
+          },
+          "city_gc_id": {
+            "type": "integer",
+            "example": 59
+          },
+          "points_count": {
+            "type": "integer",
+            "example": 1
+          }
+        },
+        "type": "object"
+      },
+      "AuctionListItemTrading": {
+        "description": "Данные торгов.",
+        "properties": {
+          "status": {
+            "description": "Статус аукциона:\n\n* **Planning** — планирование (1)\n* **Auction** — торги идут (2)\n* **DeterminateWinner** — определение победителя (3)\n* **WaitDeal** — ожидание сделки (4)\n* **InProgress** — в работе (5)\n* **Finished** — завершён (6)\n* **Stopped** — остановлен (7)\n* **Canceled** — отменён (8)\n* **Unknown** — неизвестный статус\n",
+            "type": "string",
+            "example": "Auction",
+            "enum": [
+              "Planning",
+              "Auction",
+              "DeterminateWinner",
+              "WaitDeal",
+              "InProgress",
+              "Finished",
+              "Stopped",
+              "Canceled",
+              "Unknown"
+            ]
+          },
+          "status_mobile": {
+            "description": "Торговый статус пользователя в аукционе:\n\n* **NotParticipating** — не участвует (1)\n* **Leading** — лидирует (2)\n* **Losing** — перебит (3)\n* **Winner** — победитель (4)\n* **Confirmed** — подтверждён (5)\n* **Unknown** — неизвестный статус\n",
+            "type": "string",
+            "example": "NotParticipating",
+            "enum": [
+              "NotParticipating",
+              "Leading",
+              "Losing",
+              "Winner",
+              "Confirmed",
+              "Unknown"
+            ]
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-26T09:00:00"
+          },
+          "stop_time": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-26T09:00:00"
+          },
+          "bid_measurement_type": {
+            "description": "Единица измерения ставки:\n\n* **PerRoute** — за рейс (0)\n* **PerKm** — за км (1)\n* **Unknown** — неизвестный тип\n",
+            "type": "string",
+            "example": "PerRoute",
+            "nullable": true,
+            "enum": [
+              "PerRoute",
+              "PerKm",
+              "Unknown"
+            ]
+          },
+          "can_set_bet": {
+            "type": "boolean",
+            "example": false
+          },
+          "allow_counter_bets": {
+            "type": "boolean",
+            "example": true
+          },
+          "hide_points_address_and_contacts": {
+            "type": "boolean",
+            "example": true
+          },
+          "direction": {
+            "type": "string",
+            "example": null
+          },
+          "comment": {
+            "type": "string",
+            "example": null
+          },
+          "is_bidder": {
+            "type": "boolean",
+            "example": false
+          },
+          "is_available": {
+            "type": "boolean",
+            "example": false
+          },
+          "is_accredited": {
+            "type": "boolean",
+            "example": false
+          },
+          "is_favorite": {
+            "type": "boolean",
+            "example": false
+          },
+          "price": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AuctionListItemTradingPrice"
+              }
+            ],
+            "nullable": true
+          },
+          "your": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AuctionListItemTradingYour"
+              }
+            ],
+            "nullable": true
+          },
+          "red_bet_with_vat": {
+            "type": "boolean",
+            "example": false
+          },
+          "red_bet_no_vat": {
+            "type": "boolean",
+            "example": false
+          },
+          "is_last_bet_with_vat": {
+            "type": "boolean",
+            "example": null
+          }
+        },
+        "type": "object"
+      },
+      "AuctionListItemTradingPrice": {
+        "properties": {
+          "start": {
+            "type": "number",
+            "format": "float",
+            "example": 30000
+          },
+          "current": {
+            "type": "number",
+            "format": "float",
+            "example": 30000
+          },
+          "current_no_vat": {
+            "type": "number",
+            "format": "float",
+            "example": 30000
+          }
+        },
+        "type": "object"
+      },
+      "AuctionListItemTradingYour": {
+        "properties": {
+          "bet": {
+            "description": "Есть ли ставка от текущего пользователя",
+            "type": "boolean",
+            "example": false
+          },
+          "last_bet": {
+            "description": "Последняя ставка пользователя",
+            "type": "number",
+            "example": 30000,
+            "nullable": true
+          }
+        },
+        "type": "object"
+      },
+      "AuctionListMeta": {
+        "description": "Мета-данные пагинации внешнего сервиса.",
+        "properties": {
+          "current_page": {
+            "type": "integer",
+            "example": 1
+          },
+          "from": {
+            "type": "integer",
+            "example": 1
+          },
+          "last_page": {
+            "type": "integer",
+            "example": 575
+          },
+          "per_page": {
+            "type": "integer",
+            "example": 2
+          },
+          "to": {
+            "type": "integer",
+            "example": 20
+          },
+          "total": {
+            "type": "integer",
+            "example": 1149
+          }
+        },
+        "type": "object"
+      },
+      "AuctionListRequest": {
+        "description": "Фильтры и параметры пагинации списка аукционов",
+        "properties": {
+          "page": {
+            "description": "Запрашиваемая страница",
+            "type": "integer",
+            "example": 1
+          },
+          "per_page": {
+            "description": "Количество элементов на странице",
+            "type": "integer",
+            "example": 20
+          },
+          "is_oldest": {
+            "description": "Порядок сортировки по дате: true = ASC, false / null = DESC",
+            "type": "boolean",
+            "example": false
+          },
+          "sort": {
+            "description": "Сортировка по полям; ключ — имя поля, значение — направление",
+            "type": "object",
+            "example": {
+              "start_time": "asc",
+              "price_per_km": "asc",
+              "current_price": "asc"
+            },
+            "nullable": true,
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          "status": {
+            "description": "Фильтр по торговому статусу пользователя (строковые значения)\n\nТорговый статус пользователя в аукционе:\n* **NotParticipating** — не участвует (1)\n* **Leading** — лидирует (2)\n* **Losing** — перебит (3)\n* **Winner** — победитель (4)\n* **Confirmed** — подтверждён (5)\n* **Unknown** — неизвестный статус",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "NotParticipating",
+                "Leading",
+                "Losing",
+                "OnPending",
+                "Confirmed",
+                "ChoosingWinner",
+                "Winner",
+                "Accepted",
+                "Unknown"
+              ]
+            },
+            "example": [
+              "Leading",
+              "Losing"
+            ]
+          },
+          "mobile_statuses": {
+            "description": "Фильтр по торговому статусу пользователя (числовые значения)",
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "example": [
+              2,
+              3
+            ]
+          },
+          "statuses": {
+            "description": "Фильтр по статусу аукциона (числовые значения: 1–7)",
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "example": [
+              2
+            ]
+          },
+          "cargo_num": {
+            "description": "Номер заявки",
+            "type": "string",
+            "example": "00000001059"
+          },
+          "weight_from": {
+            "description": "Вес груза от (т)",
+            "type": "number",
+            "example": 5
+          },
+          "weight_to": {
+            "description": "Вес груза до (т)",
+            "type": "number",
+            "example": 5
+          },
+          "volume_from": {
+            "description": "Объём груза от (м³)",
+            "type": "number",
+            "example": 10
+          },
+          "volume_to": {
+            "description": "Объём груза до (м³)",
+            "type": "number",
+            "example": 82
+          },
+          "body_types": {
+            "description": "Фильтр по типу кузова",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "тентованный",
+              "фургон"
+            ]
+          },
+          "form_type": {
+            "description": "Тип формы",
+            "type": "string",
+            "example": null,
+            "nullable": true
+          },
+          "is_international_shipment": {
+            "description": "Только международные перевозки",
+            "type": "boolean",
+            "example": false
+          },
+          "load_city": {
+            "description": "Название города погрузки",
+            "type": "string",
+            "example": "Пермь"
+          },
+          "load_gc_id": {
+            "description": "GC ID города погрузки",
+            "type": "integer",
+            "example": 59
+          },
+          "load_range": {
+            "description": "Радиус поиска от города погрузки (км)",
+            "type": "integer",
+            "example": 100
+          },
+          "unload_city": {
+            "description": "Название города выгрузки",
+            "type": "string",
+            "example": "Москва"
+          },
+          "unload_gc_id": {
+            "description": "GC ID города выгрузки",
+            "type": "integer",
+            "example": 100
+          },
+          "unload_range": {
+            "description": "Радиус поиска от города выгрузки (км)",
+            "type": "integer",
+            "example": 50
+          },
+          "load_date_from": {
+            "description": "Дата и время погрузки от (ISO 8601 со смещением)",
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(([+-]\\d{2}:\\d{2})|Z)$",
+            "example": "2026-05-26T15:30:00+03:00"
+          },
+          "load_date_to": {
+            "description": "Дата и время погрузки до (ISO 8601 со смещением)",
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(([+-]\\d{2}:\\d{2})|Z)$",
+            "example": "2026-05-26T15:30:00+03:00"
+          },
+          "unload_date_from": {
+            "description": "Дата выгрузки от (ISO 8601 со смещением)",
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(([+-]\\d{2}:\\d{2})|Z)$",
+            "example": "2026-05-26T15:30:00+03:00"
+          },
+          "unload_date_to": {
+            "description": "Дата выгрузки до (ISO 8601 со смещением)",
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(([+-]\\d{2}:\\d{2})|Z)$",
+            "example": "2026-05-26T15:30:00+03:00"
+          },
+          "create_date_from": {
+            "description": "Дата создания аукциона от (ISO 8601 со смещением)",
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(([+-]\\d{2}:\\d{2})|Z)$",
+            "example": "2026-05-26T15:30:00+03:00"
+          },
+          "create_date_to": {
+            "description": "Дата создания аукциона до (ISO 8601 со смещением)",
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(([+-]\\d{2}:\\d{2})|Z)$",
+            "example": "2026-05-26T15:30:00+03:00"
+          },
+          "start_time_from": {
+            "description": "Начало торгов от (ISO 8601 со смещением)",
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(([+-]\\d{2}:\\d{2})|Z)$",
+            "example": "2026-05-26T15:30:00+03:00"
+          },
+          "start_time_to": {
+            "description": "Начало торгов до (ISO 8601 со смещением)",
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(([+-]\\d{2}:\\d{2})|Z)$",
+            "example": "2026-05-26T15:30:00+03:00"
+          },
+          "stop_time_from": {
+            "description": "Окончание торгов от (ISO 8601 со смещением)",
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(([+-]\\d{2}:\\d{2})|Z)$",
+            "example": "2026-05-26T15:30:00+03:00"
+          },
+          "stop_time_to": {
+            "description": "Окончание торгов до (ISO 8601 со смещением)",
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(([+-]\\d{2}:\\d{2})|Z)$",
+            "example": "2026-05-26T15:30:00+03:00"
+          },
+          "is_available": {
+            "description": "Только доступные для ставки аукционы",
+            "type": "boolean",
+            "example": true
+          },
+          "is_favorite": {
+            "description": "Только избранные аукционы",
+            "type": "boolean",
+            "example": true
+          },
+          "is_bidder": {
+            "description": "Только аукционы, в которых пользователь участвовал",
+            "type": "boolean",
+            "example": true
+          },
+          "customer": {
+            "description": "Поиск по названию или ИНН заказчика",
+            "type": "string",
+            "example": "ЛИМ"
+          },
+          "customer_ids": {
+            "description": "Фильтр по ID заказчиков",
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "example": [
+              330,
+              340
+            ]
+          },
+          "contractor": {
+            "description": "Поиск по перевозчику",
+            "type": "string",
+            "example": null,
+            "nullable": true
+          },
+          "auction_ids": {
+            "description": "Фильтр по ID аукционов",
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "example": [
+              1224,
+              1236
+            ]
+          },
+          "replace_external_pads": {
+            "description": "Заменять внешние площадки",
+            "type": "boolean",
+            "example": null,
+            "nullable": true
+          },
+          "current_price_from": {
+            "description": "Цена от",
+            "type": "number",
+            "format": "float",
+            "example": null,
+            "nullable": true
+          },
+          "current_price_to": {
+            "description": "Цена до",
+            "type": "number",
+            "format": "float",
+            "example": null,
+            "nullable": true
+          },
+          "price_per_km_from": {
+            "description": "Цена за км от",
+            "type": "number",
+            "format": "float",
+            "example": null,
+            "nullable": true
+          },
+          "price_per_km_to": {
+            "description": "Цена за км до",
+            "type": "number",
+            "format": "float",
+            "example": null,
+            "nullable": true
+          },
+          "auc_type": {
+            "description": "Фильтр по типу аукциона\n\nТип аукциона:\n* **Request** — подтверждён (1)\n* **Up** — подтверждён (2)\n* **Down** — подтверждён (3)\n* **FixPrice** — подтверждён (4)\n* **Unknown** — неизвестный статус",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Request",
+                "Up",
+                "Down",
+                "FixPrice"
+              ]
+            },
+            "example": [
+              "Request",
+              "Up"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "AuctionListResponseBase": {
+        "description": "Корневой объект ответа списка аукционов с мета-данными.",
+        "properties": {
+          "data": {
+            "description": "Коллекция аукционов",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuctionListItem"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/AuctionListMeta"
+          }
+        },
+        "type": "object"
+      },
+      "AuctionShowCargo": {
+        "properties": {
+          "price": {
+            "description": "Цена груза",
+            "type": "string",
+            "example": "0"
+          },
+          "currency": {
+            "type": "integer",
+            "example": 643,
+            "nullable": true
+          },
+          "is_international": {
+            "type": "boolean",
+            "example": false
+          },
+          "distance": {
+            "description": "Расстояние в км",
+            "type": "integer",
+            "example": 1500,
+            "nullable": true
+          },
+          "truck_count": {
+            "type": "integer",
+            "example": 1
+          },
+          "body_type": {
+            "type": "string",
+            "example": "тентованный"
+          },
+          "temp_from": {
+            "type": "number",
+            "example": null,
+            "nullable": true
+          },
+          "temp_to": {
+            "type": "number",
+            "example": null,
+            "nullable": true
+          },
+          "conics": {
+            "type": "integer",
+            "example": null,
+            "nullable": true
+          },
+          "belts": {
+            "type": "integer",
+            "example": null,
+            "nullable": true
+          },
+          "adr": {
+            "type": "integer",
+            "example": null,
+            "nullable": true
+          },
+          "coupling": {
+            "type": "boolean",
+            "example": null,
+            "nullable": true
+          },
+          "air_pass": {
+            "type": "boolean",
+            "example": null,
+            "nullable": true
+          },
+          "low_loader": {
+            "type": "boolean",
+            "example": null,
+            "nullable": true
+          },
+          "additional_load": {
+            "type": "boolean",
+            "example": null,
+            "nullable": true
+          },
+          "containered": {
+            "type": "boolean",
+            "example": false
+          },
+          "container_type": {
+            "type": "string",
+            "example": null,
+            "nullable": true
+          },
+          "container_size": {
+            "type": "string",
+            "example": null,
+            "nullable": true
+          },
+          "loading_types": {
+            "$ref": "#/components/schemas/LoadingTypes"
+          },
+          "docs": {
+            "$ref": "#/components/schemas/Docs"
+          },
+          "car": {
+            "$ref": "#/components/schemas/CarRequirements"
+          }
+        },
+        "type": "object"
+      },
+      "AuctionShowMain": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1236
+          },
+          "cargo_num": {
+            "type": "string",
+            "example": "00000001059"
+          },
+          "cargo_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-04T14:49:09"
+          },
+          "order_uid": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3a05d045-0e67-4f85-b20a-de81d18bba7a"
+          },
+          "auc_type": {
+            "$ref": "#/components/schemas/AuctionType"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-25T11:48:20"
+          }
+        },
+        "type": "object"
+      },
+      "AuctionShowOrganizer": {
+        "properties": {
+          "subscriber_id": {
+            "type": "integer",
+            "example": 98
+          },
+          "subscriber_code": {
+            "type": "string",
+            "example": "12345"
+          },
+          "infobase_code": {
+            "type": "string",
+            "example": "RU_Cargo_01"
+          },
+          "organization_name": {
+            "type": "string",
+            "example": "ЛИМ"
+          },
+          "organization_inn": {
+            "type": "string",
+            "example": "7703769184"
+          },
+          "organization_kpp": {
+            "type": "string",
+            "example": "770301001"
+          },
+          "organization_id": {
+            "type": "integer",
+            "example": 340
+          }
+        },
+        "type": "object"
+      },
+      "AuctionShowPayment": {
+        "properties": {
+          "condition": {
+            "type": "string",
+            "example": "По оригиналам накладных (ТН, ТТН, CMR)",
+            "nullable": true
+          },
+          "condition_predefined": {
+            "type": "string",
+            "example": "ПоОригиналамНаладных",
+            "nullable": true
+          },
+          "form": {
+            "type": "string",
+            "example": "Безналичная с НДС"
+          },
+          "delay": {
+            "description": "Отсрочка платежа",
+            "type": "integer",
+            "example": 30,
+            "nullable": true
+          },
+          "delay_type": {
+            "$ref": "#/components/schemas/PaymentDelayType"
+          },
+          "currency_code": {
+            "description": "Код валюты (ISO 4217 numeric)",
+            "type": "string",
+            "example": "643"
+          },
+          "prepay": {
+            "type": "string",
+            "example": "0",
+            "nullable": true
+          }
+        },
+        "type": "object"
+      },
+      "AuctionShowResponse": {
+        "required": [
+          "main",
+          "organizer",
+          "contacts",
+          "cargo",
+          "trading",
+          "payment",
+          "assembly",
+          "routes",
+          "admitted_organizations"
+        ],
+        "properties": {
+          "main": {
+            "$ref": "#/components/schemas/AuctionShowMain"
+          },
+          "organizer": {
+            "$ref": "#/components/schemas/AuctionShowOrganizer"
+          },
+          "contacts": {
+            "description": "Контакты организатора (пустой массив если данных нет)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Contact"
+            }
+          },
+          "cargo": {
+            "$ref": "#/components/schemas/AuctionShowCargo"
+          },
+          "trading": {
+            "$ref": "#/components/schemas/AuctionShowTrading"
+          },
+          "payment": {
+            "$ref": "#/components/schemas/AuctionShowPayment"
+          },
+          "assembly": {
+            "$ref": "#/components/schemas/Assembly"
+          },
+          "routes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoutePoint"
+            }
+          },
+          "admitted_organizations": {
+            "description": "Допущенные к торгам организации",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdmittedOrganization"
+            }
+          },
+          "hide_bets_history": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "type": "object"
+      },
+      "AuctionShowTrading": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/AuctionStatus"
+          },
+          "status_mobile": {
+            "$ref": "#/components/schemas/TradingStatus"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-25T16:03:00"
+          },
+          "stop_time": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-25T16:18:00"
+          },
+          "bid_measurement_type": {
+            "$ref": "#/components/schemas/BidMeasurementType"
+          },
+          "can_set_bet": {
+            "type": "boolean",
+            "example": false
+          },
+          "allow_counter_bets": {
+            "type": "boolean",
+            "example": true
+          },
+          "hide_bets_history": {
+            "type": "boolean",
+            "example": true
+          },
+          "hide_places": {
+            "type": "boolean",
+            "example": true
+          },
+          "no_view_cargo_price": {
+            "type": "boolean",
+            "example": false
+          },
+          "hide_points_address_and_contacts": {
+            "type": "boolean",
+            "example": true
+          },
+          "is_bidder": {
+            "type": "boolean",
+            "example": false
+          },
+          "is_favorite": {
+            "type": "boolean",
+            "example": false
+          },
+          "is_last_bet_with_vat": {
+            "type": "boolean",
+            "example": null,
+            "nullable": true
+          },
+          "red_bet_with_vat": {
+            "type": "boolean",
+            "example": false
+          },
+          "red_bet_no_vat": {
+            "type": "boolean",
+            "example": false
+          },
+          "send_deal_before_load": {
+            "type": "boolean",
+            "example": false
+          },
+          "chat_id": {
+            "type": "string",
+            "example": null,
+            "nullable": true
+          },
+          "price": {
+            "$ref": "#/components/schemas/AuctionShowTradingPrice"
+          },
+          "your": {
+            "$ref": "#/components/schemas/AuctionShowTradingYour"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/AuctionShowTradingSettings"
+          }
+        },
+        "type": "object"
+      },
+      "AuctionShowTradingPrice": {
+        "properties": {
+          "start": {
+            "type": "number",
+            "format": "float",
+            "example": 30000,
+            "nullable": true
+          },
+          "start_no_vat": {
+            "type": "number",
+            "format": "float",
+            "example": 25000,
+            "nullable": true
+          },
+          "current": {
+            "type": "number",
+            "format": "float",
+            "example": 30000,
+            "nullable": true
+          },
+          "current_no_vat": {
+            "type": "number",
+            "format": "float",
+            "example": 24590.16,
+            "nullable": true
+          },
+          "available": {
+            "type": "number",
+            "format": "float",
+            "example": 29000,
+            "nullable": true
+          },
+          "available_no_vat": {
+            "type": "number",
+            "format": "float",
+            "example": 24166,
+            "nullable": true
+          },
+          "min": {
+            "type": "number",
+            "format": "float",
+            "example": 20000,
+            "nullable": true
+          },
+          "min_no_vat": {
+            "type": "number",
+            "format": "float",
+            "example": 16666.67,
+            "nullable": true
+          },
+          "max": {
+            "type": "number",
+            "format": "float",
+            "example": 30000,
+            "nullable": true
+          },
+          "max_no_vat": {
+            "type": "number",
+            "format": "float",
+            "example": 25000,
+            "nullable": true
+          },
+          "step": {
+            "type": "number",
+            "format": "float",
+            "example": 500,
+            "nullable": true
+          },
+          "step_no_vat": {
+            "type": "number",
+            "format": "float",
+            "example": 416.67,
+            "nullable": true
+          },
+          "price_per_km": {
+            "description": "current_price_no_vat / distance; 0 если distance = 0",
+            "type": "number",
+            "format": "float",
+            "example": 16.39
+          }
+        },
+        "type": "object"
+      },
+      "AuctionShowTradingSettings": {
+        "properties": {
+          "prolong_after_bet": {
+            "description": "Продление аукциона после ставки (мин)",
+            "type": "integer",
+            "example": 10,
+            "nullable": true
+          },
+          "winner_confirm": {
+            "type": "integer",
+            "example": 1,
+            "nullable": true
+          },
+          "winner_counter_mode": {
+            "type": "integer",
+            "example": null,
+            "nullable": true
+          },
+          "transmission_time_in": {
+            "description": "Время на передачу (ч)",
+            "type": "integer",
+            "example": 24,
+            "nullable": true
+          },
+          "coefficient": {
+            "type": "integer",
+            "example": 10,
+            "nullable": true
+          }
+        },
+        "type": "object"
+      },
+      "AuctionShowTradingYour": {
+        "properties": {
+          "bet": {
+            "type": "boolean",
+            "example": false
+          },
+          "last_bet": {
+            "type": "number",
+            "example": null,
+            "nullable": true
+          },
+          "last_bet_with_vat": {
+            "type": "number",
+            "example": null,
+            "nullable": true
+          },
+          "win": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "type": "object"
+      },
+      "AuctionStatus": {
+        "description": "Статус аукциона:\n- `Planning` — планирование (1)\n- `Auction` — торги идут (2)\n- `DeterminateWinner` — определение победителя (3)\n- `WaitDeal` — ожидание сделки (4)\n- `InProgress` — в работе (5)\n- `Finished` — завершён (6)\n- `Stopped` — остановлен (7)\n- `Canceled` — отменён (8)\n- `Unknown` — неизвестный статус",
+        "type": "string",
+        "example": "Auction",
+        "enum": [
+          "Planning",
+          "Auction",
+          "DeterminateWinner",
+          "WaitDeal",
+          "InProgress",
+          "Finished",
+          "Stopped",
+          "Canceled",
+          "Unknown"
+        ]
+      },
+      "AuctionType": {
+        "description": "Тип аукциона:\n- `Request` — заявочный (1)\n- `Up` — на повышение (2)\n- `Down` — на понижение (3)\n- `FixPrice` — фиксированная цена (4)\n- `Unknown` — неизвестный тип",
+        "type": "string",
+        "example": "Down",
+        "enum": [
+          "Request",
+          "Up",
+          "Down",
+          "FixPrice",
+          "Unknown"
+        ]
+      },
+      "BetItem": {
+        "properties": {
+          "id": {
+            "description": "ID ставки",
+            "type": "integer",
+            "example": 42
+          },
+          "created_at": {
+            "description": "Дата и время создания ставки",
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-25T16:05:00"
+          },
+          "auction_id": {
+            "description": "ID аукциона",
+            "type": "integer",
+            "example": 1236
+          },
+          "subscriber_id": {
+            "description": "ID подписчика (перевозчика)",
+            "type": "integer",
+            "example": 13
+          },
+          "contact_name": {
+            "description": "Имя контактного лица",
+            "type": "string",
+            "example": "Иванов Иван"
+          },
+          "contact_phone": {
+            "description": "Телефон контактного лица (пустая строка если не задан)",
+            "type": "string",
+            "example": "+79001234567"
+          },
+          "price_with_vat": {
+            "description": "Цена ставки с НДС",
+            "type": "number",
+            "format": "float",
+            "example": 30000
+          },
+          "price_no_vat": {
+            "description": "Цена ставки без НДС",
+            "type": "number",
+            "format": "float",
+            "example": 24590.16
+          },
+          "organization_id": {
+            "description": "ID организации перевозчика",
+            "type": "integer",
+            "example": 14
+          },
+          "organization_inn": {
+            "description": "ИНН организации перевозчика",
+            "type": "string",
+            "example": "9616244307"
+          },
+          "organization_name": {
+            "description": "Название организации перевозчика (пустая строка если не задано)",
+            "type": "string",
+            "example": "ООО Перевозчик"
+          },
+          "transporter_comment": {
+            "type": "string",
+            "example": null,
+            "nullable": true
+          },
+          "is_rejected": {
+            "description": "Ставка отклонена",
+            "type": "boolean",
+            "example": false
+          },
+          "is_counter": {
+            "description": "Ставка является встречной",
+            "type": "boolean",
+            "example": false
+          },
+          "place": {
+            "description": "Место в рейтинге ставок",
+            "type": "integer",
+            "example": 1,
+            "nullable": true
+          },
+          "is_win": {
+            "description": "Ставка является победившей",
+            "type": "boolean",
+            "example": false
+          },
+          "run_number": {
+            "description": "Номер рейса (0 если не задан)",
+            "type": "integer",
+            "example": 0
+          },
+          "cancel_reason": {
+            "description": "Причина отмены ставки (пустая строка если не отменена)",
+            "type": "string",
+            "example": ""
+          },
+          "price_info": {
+            "$ref": "#/components/schemas/BetItemPriceInfo"
+          }
+        },
+        "type": "object"
+      },
+      "BetItemPriceInfo": {
+        "properties": {
+          "price_with_vat": {
+            "type": "number",
+            "format": "float",
+            "example": 30000,
+            "nullable": true
+          },
+          "price_no_vat": {
+            "type": "number",
+            "format": "float",
+            "example": 24590.16,
+            "nullable": true
+          },
+          "payment_type": {
+            "type": "string",
+            "example": "Безналичная с НДС",
+            "nullable": true
+          },
+          "vat_rate": {
+            "type": "string",
+            "example": "20",
+            "nullable": true
+          }
+        },
+        "type": "object"
+      },
+      "BetListResponse": {
+        "required": [
+          "bets"
+        ],
+        "properties": {
+          "bets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BetItem"
+            }
+          }
+        },
+        "type": "object"
+      },
+      "BidMeasurementType": {
+        "description": "Единица измерения ставки:\n- `PerRoute` — за рейс (0)\n- `PerKm` — за км (1)\n- `Unknown` — неизвестный тип",
+        "type": "string",
+        "example": "PerRoute",
+        "enum": [
+          "PerRoute",
+          "PerKm",
+          "Unknown"
+        ]
+      },
+      "CarRequirements": {
+        "description": "Требования к ТС; null если не заданы",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "Тягач"
+          },
+          "weight": {
+            "type": "number",
+            "format": "float",
+            "example": 20,
+            "nullable": true
+          },
+          "volume": {
+            "type": "number",
+            "format": "float",
+            "example": 82,
+            "nullable": true
+          },
+          "width": {
+            "type": "number",
+            "format": "float",
+            "example": 2.4,
+            "nullable": true
+          },
+          "length": {
+            "type": "number",
+            "format": "float",
+            "example": 13.6,
+            "nullable": true
+          },
+          "height": {
+            "type": "number",
+            "format": "float",
+            "example": 2.7,
+            "nullable": true
+          }
+        },
+        "type": "object",
+        "nullable": true
+      },
+      "Contact": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Иванов Иван Иванович",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "example": "+79001234567",
+            "nullable": true
+          },
+          "work_phone": {
+            "type": "string",
+            "example": null,
+            "nullable": true
+          },
+          "uid": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "example": "ivanov@example.com",
+            "nullable": true
+          }
+        },
+        "type": "object"
+      },
+      "Docs": {
+        "properties": {
+          "tir": {
+            "type": "boolean",
+            "example": false
+          },
+          "cmr": {
+            "type": "boolean",
+            "example": false
+          },
+          "t1": {
+            "type": "boolean",
+            "example": false
+          },
+          "med": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "type": "object"
+      },
+      "LoadingTypes": {
+        "properties": {
+          "side": {
+            "type": "boolean",
+            "example": false
+          },
+          "top": {
+            "type": "boolean",
+            "example": false
+          },
+          "rear": {
+            "type": "boolean",
+            "example": false
+          },
+          "full": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "type": "object"
+      },
+      "OperationType": {
+        "description": "Тип операции маршрутной точки:\n- `Loading` — погрузка (1)\n- `Unloading` — выгрузка (2)\n- `Unknown` — неизвестный тип",
+        "type": "string",
+        "example": "Loading",
+        "enum": [
+          "Loading",
+          "Unloading",
+          "Unknown"
+        ]
+      },
+      "PaymentDelayType": {
+        "description": "Тип отсрочки платежа:\n- `CalendarDays` — календарные дни (1)\n- `WorkDays` — рабочие дни (2)\n- `Unknown` — неизвестный тип",
+        "type": "string",
+        "example": "CalendarDays",
+        "nullable": true,
+        "enum": [
+          "CalendarDays",
+          "WorkDays",
+          "Unknown"
+        ]
+      },
+      "ProblemDetail": {
+        "description": "Единый формат ошибки API (см. error-response-guideline.md). HTTP-код — в статус-строке ответа, в теле не дублируется.",
+        "required": [
+          "code",
+          "title",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "description": "Машиночитаемый код (snake_case), стабилен между релизами",
+            "type": "string",
+            "example": "resource_not_found"
+          },
+          "title": {
+            "description": "Короткое название типа ошибки",
+            "type": "string",
+            "example": "Не найдено"
+          },
+          "message": {
+            "description": "Пояснение конкретного случая",
+            "type": "string",
+            "example": "Заявка не найдена"
+          },
+          "trace_id": {
+            "description": "Идентификатор запроса для корреляции с логами",
+            "type": "string",
+            "example": "0af7651916cd43dd8448eb211c80319c",
+            "nullable": true
+          }
+        },
+        "type": "object"
+      },
+      "RoutePoint": {
+        "properties": {
+          "row_num": {
+            "type": "integer",
+            "example": 1
+          },
+          "op_type": {
+            "$ref": "#/components/schemas/OperationType"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-26T09:00:00"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-26T18:00:00"
+          },
+          "comment": {
+            "type": "string",
+            "example": null,
+            "nullable": true
+          },
+          "contractor": {
+            "type": "string",
+            "example": ""
+          },
+          "contractor_inn": {
+            "type": "string",
+            "example": ""
+          },
+          "location": {
+            "$ref": "#/components/schemas/RoutePointLocation"
+          },
+          "cargo": {
+            "$ref": "#/components/schemas/RoutePointCargo"
+          },
+          "contact": {
+            "$ref": "#/components/schemas/RoutePointContact"
+          }
+        },
+        "type": "object"
+      },
+      "RoutePointCargo": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Мороженое"
+          },
+          "package_name": {
+            "type": "string",
+            "example": ""
+          },
+          "weight": {
+            "description": "Вес в тоннах (строковое представление с 3 знаками)",
+            "type": "string",
+            "example": "1.000"
+          },
+          "volume": {
+            "description": "Объём в м³ (строковое представление с 3 знаками)",
+            "type": "string",
+            "example": "1.000"
+          },
+          "length": {
+            "type": "string",
+            "example": "0"
+          },
+          "width": {
+            "type": "string",
+            "example": "0"
+          },
+          "height": {
+            "type": "string",
+            "example": "0"
+          },
+          "oversized": {
+            "type": "boolean",
+            "example": false
+          },
+          "package_amount": {
+            "type": "integer",
+            "example": null,
+            "nullable": true
+          }
+        },
+        "type": "object"
+      },
+      "RoutePointContact": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": ""
+          },
+          "phone": {
+            "type": "string",
+            "example": ""
+          }
+        },
+        "type": "object"
+      },
+      "RoutePointLocation": {
+        "properties": {
+          "city_name": {
+            "type": "string",
+            "example": "Пермь"
+          },
+          "city_full_name": {
+            "type": "string",
+            "example": "Пермь, Россия"
+          },
+          "city_gc_id": {
+            "type": "integer",
+            "example": 59
+          },
+          "loading_address": {
+            "type": "string",
+            "example": "Транспортная 9"
+          },
+          "lon": {
+            "type": "number",
+            "format": "double",
+            "example": 56.238
+          },
+          "lat": {
+            "type": "number",
+            "format": "double",
+            "example": 58.01
+          }
+        },
+        "type": "object"
+      },
+      "SetBetRequest": {
+        "required": [
+          "price"
+        ],
+        "properties": {
+          "price": {
+            "description": "Цена ставки (> 0)",
+            "type": "number",
+            "example": 15000
+          }
+        },
+        "type": "object"
+      },
+      "TradingStatus": {
+        "description": "Торговый статус пользователя в аукционе:\n- `NotParticipating` — не участвует (1)\n- `Leading` — лидирует (2)\n- `Losing` — перебит (3)\n- `Winner` — победитель (4)\n- `Confirmed` — подтверждён (5)\n- `Unknown` — неизвестный статус",
+        "type": "string",
+        "example": "NotParticipating",
+        "enum": [
+          "NotParticipating",
+          "Leading",
+          "Losing",
+          "OnPending",
+          "Confirmed",
+          "ChoosingWinner",
+          "Winner",
+          "Accepted",
+          "Unknown"
+        ]
+      },
+      "ValidationError": {
+        "description": "Ошибка по конкретному полю запроса",
+        "required": [
+          "field",
+          "message"
+        ],
+        "properties": {
+          "field": {
+            "description": "Путь к полю (snake_case, вложенные — через точку)",
+            "type": "string",
+            "example": "per_page"
+          },
+          "message": {
+            "type": "string",
+            "example": "Значение должно быть не больше 100."
+          },
+          "code": {
+            "description": "Машиночитаемый код нарушения",
+            "type": "string",
+            "example": "max_value",
+            "nullable": true
+          }
+        },
+        "type": "object"
+      },
+      "ValidationProblem": {
+        "description": "Ошибка валидации входных данных (422). Отличается от бизнес-ошибки кодом `validation_failed` и наличием `errors[]`.",
+        "required": [
+          "code",
+          "title",
+          "message",
+          "errors"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "validation_failed"
+          },
+          "title": {
+            "type": "string",
+            "example": "Ошибка валидации"
+          },
+          "message": {
+            "type": "string",
+            "example": "Запрос содержит некорректные поля."
+          },
+          "trace_id": {
+            "type": "string",
+            "example": "0af7651916cd43dd8448eb211c80319c",
+            "nullable": true
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            }
+          }
+        },
+        "type": "object"
+      }
+    },
+    "responses": {
+      "NotFound": {
+        "description": "Ресурс не найден",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProblemDetail"
+            }
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "description": "Временная недоступность upstream (перегрузка, соединение не установлено)",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProblemDetail"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Не авторизован (отсутствует или недействителен Bearer-токен)",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProblemDetail"
+            }
+          }
+        }
+      },
+      "ValidationFailed": {
+        "description": "Ошибка валидации входных данных",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ValidationProblem"
+            }
+          }
+        }
+      }
+    }
+  }
+}
